@@ -89,19 +89,106 @@ def depthFirstSearch(problem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # Stack contails state + array of actions
+    stack = util.Stack()
+    visitedPositions = []
+    startState = problem.getStartState()
+
+    # add the start position to stack and continue from there
+    startPosition = (startState, [])
+    stack.push(startPosition)
+
+    while not stack.isEmpty():
+        # get first entry from stack
+        currentState, actions = stack.pop()
+
+        # ignore positions, that were already visited
+        if currentState not in visitedPositions:
+            visitedPositions.append(currentState)
+
+            if problem.isGoalState(currentState):
+                return actions
+
+            else:
+                # get all successors to the current field. You need their new state and the updated actions.
+                # push them to the stack and repeat entire process
+                successors = problem.getSuccessors(currentState)
+
+                for successorState, successorAction, successorCost in successors:
+                    print(successorState, successorCost)
+                    newActions = actions + [successorAction]
+                    newState = successorState, newActions
+                    stack.push(newState)
 
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # Stack contails state + array of actions
+    queue = util.Queue
+    visitedPositions = []
+    startState = problem.getStartState()
+
+    # add the start position to stack and continue from there
+    startPosition = (startState, [])
+    queue.push(startPosition)
+
+    while not queue.isEmpty():
+        # get first entry from stack
+        currentState, actions = queue.pop()
+
+        # ignore positions, that were already visited
+        if currentState not in visitedPositions:
+            visitedPositions.append(currentState)
+
+            if problem.isGoalState(currentState):
+                return actions
+
+            else:
+                # get all successors to the current field. You need their new state and the updated actions.
+                # push them to the stack and repeat entire process
+                successors = problem.getSuccessors(currentState)
+
+                for successorState, successorAction, successorCost in successors:
+                    newActions = actions + [successorAction]
+                    newState = successorState, newActions
+                    queue.push(newState)
 
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # Stack contails state + array of actions
+    queue = util.PriorityQueue()
+    visitedPositions = []
+    startState = problem.getStartState()
+
+    # add the start position to stack and continue from there
+    startPosition = (startState, [], 0)
+    queue.update(startPosition, 1)
+
+    while not queue.isEmpty():
+        # get first entry from stack
+        currentState, actions, costs = queue.pop()
+
+        # ignore positions, that were already visited
+        if currentState not in visitedPositions:
+            visitedPositions.append(currentState)
+
+            if problem.isGoalState(currentState):
+                return actions
+
+            else:
+                # get all successors to the current field. You need their new state and the updated actions.
+                # push them to the stack and repeat entire process
+                successors = problem.getSuccessors(currentState)
+
+                for successorState, successorAction, successorCost in successors:
+                    newActions = actions + [successorAction]
+                    newCosts = costs + successorCost
+                    newState = successorState, newActions, newCosts
+                    print(successorCost, newCosts)
+                    queue.update(newState, newCosts)
 
 
 def nullHeuristic(state, problem=None):
@@ -115,7 +202,43 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    queue = util.PriorityQueue()
+    # visitedPositions has to be a dictionary. I get error messages when I init is like in the last exercises (visitedPositions = [])
+    visitedPositions = dict()
+    startState = problem.getStartState()
+
+    # add the start position to fringe and continue from there
+    startPosition = (startState, [], 0)
+    queue.push((startPosition), 0)
+    costs = 0
+
+    while not queue.isEmpty():
+        # get first entry from fringe
+        currentState, actions, costs = queue.pop()
+
+        # ignore positions, that were already visited
+        if currentState in visitedPositions and visitedPositions[currentState] <= costs:
+            continue
+
+        if problem.isGoalState(currentState):
+            return actions
+
+        # get all successors to the current field. You need their new state and the updated actions.
+        # push them to the stack and repeat entire process
+        successors = problem.getSuccessors(currentState)
+        visitedPositions[currentState] = costs
+
+        for successorState, successorAction, successorCost in successors:
+            newActions = actions + [successorAction]
+            newCosts = costs + successorCost
+            newState = successorState, newActions, newCosts
+
+            # Calculate cost of f
+            g = newCosts
+            h = heuristic((successorState), problem)
+            f = g + h
+
+            queue.push(newState, f)
 
 
 # Abbreviations
