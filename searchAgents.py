@@ -164,6 +164,7 @@ class PositionSearchProblem(search.SearchProblem):
         # For display purposes
         self._visited, self._visitedlist, self._expanded = {}, [], 0 # DO NOT CHANGE
 
+
     def getStartState(self):
         return self.startState
 
@@ -287,7 +288,20 @@ class CornersProblem(search.SearchProblem):
         self._expanded = 0 # DO NOT CHANGE; Number of search nodes expanded
         # Please add any code here which you would like to use
         # in initializing the problem
+
         "*** YOUR CODE HERE ***"
+
+    ### This private method creates and returns a new state
+    # which is tuple((x,y), (bool, bool, bool, bool)) bool is True if corner is visited 
+    @staticmethod
+    def refreshVisited(self, nextPosition, state):
+        # if the corner was already visited take the old Value OR check, if the new position is a corner
+        new_cornerVisited = (self.corners[0] == nextPosition or state[1][0],
+                             self.corners[1] == nextPosition or state[1][1],
+                             self.corners[2] == nextPosition or state[1][2],
+                             self.corners[3] == nextPosition or state[1][3])
+        return (nextPosition, new_cornerVisited)
+
 
     def getStartState(self):
         """
@@ -295,14 +309,25 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # define a tuple, which contains a bool for each corner, if it's been visited
+        cornersVisited = (self.corners[0] == self.startingPosition,
+                          self.corners[1] == self.startingPosition,
+                          self.corners[2] == self.startingPosition,
+                          self.corners[3] == self.startingPosition)
+        # returns Starting State tuple((x,y), visited-corners's tuple)
+        return (self.startingPosition, cornersVisited)
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # if not all corndes have been visited return false
+        for visitedCorner in state[1]:
+            if visitedCorner == False:
+                return False    
+        return True
+
 
     def getSuccessors(self, state):
         """
@@ -325,6 +350,18 @@ class CornersProblem(search.SearchProblem):
             #   hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
+
+            x, y = state[0][0], state[0][1]
+            dx, dy = Actions.directionToVector(action)
+            next_x, next_y = int(x + dx), int(y + dy)
+            hitsWall = self.walls[next_x][next_y]
+            
+            # if pacman don't hit a wall check, if the next Postion is a corner
+            if not hitsWall:
+                # refresh the visited corners in the state
+                newState = self.refreshVisited(self, (next_x, next_y), state)
+                # save new state in list
+                successors.append(((newState), action, 1.0))
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
@@ -355,12 +392,35 @@ def cornersHeuristic(state, problem):
     This function should always return a number that is a lower bound on the
     shortest path from the state to a goal of the problem; i.e.  it should be
     admissible (as well as consistent).
+
+    Discription:    
+        Because Pacman can only move in 4 different Directions,
+        the manhatten Distance is optimal. It calculates the minimam steps to the next corner. 
+
     """
     corners = problem.corners # These are the corner coordinates
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    #ToDo:##################################### Warum Manhatten-Distanz? Wurde doch schonmal verwendet und ist nichts neues... ##############
+    #if corner not yet visited
+    manhattenSteps = []
+    # save manhatan distances from current position to unvisited corners 
+
+    if not state[1][0]:
+        manhattenSteps.append((abs(corners[0][0]-state[0][0])+(abs(corners[0][1]-state[0][1]))))
+    if not state[1][1]:
+        manhattenSteps.append((abs(corners[1][0]-state[0][0])+(abs(corners[1][1]-state[0][1]))))
+    if not state[1][2]:
+        manhattenSteps.append((abs(corners[2][0]-state[0][0])+(abs(corners[2][1]-state[0][1]))))
+    if not state[1][3]:
+        manhattenSteps.append((abs(corners[3][0]-state[0][0])+(abs(corners[3][1]-state[0][1]))))
+
+    heuristic = 0
+    # savemax manhatan distances from current position to unvisited corners 
+    for d in manhattenSteps:
+        heuristic = max(heuristic,d)
+    return heuristic # is 0 when all corners are visited (we're in goal)
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"

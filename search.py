@@ -17,6 +17,7 @@ In search.py, you will implement generic search algorithms which are called by
 Pacman agents (in searchAgents.py).
 """
 
+from typing import List, final
 import util
 
 class SearchProblem:
@@ -72,6 +73,36 @@ def tinyMazeSearch(problem):
     w = Directions.WEST
     return  [s, s, w, s, w, w, s, w]
 
+def getFinalPath(finalPath):
+    from game import Directions
+    s = Directions.SOUTH
+    n = Directions.NORTH
+    w = Directions.WEST
+    e = Directions.EAST
+    way = []
+    #print("finalPath", finalPath)
+    for node in finalPath:
+        #print("finalPath", node)
+        
+        if node[1] == "South":
+            way.append(s)
+        elif node[1] == "North":
+            way.append(n)
+        elif node[1] == "West":
+            way.append(w)
+        elif node [1] == "East":
+            way.append(e)
+        else:
+            continue
+    return way
+
+def getFinalPathWhole(finalPath):
+    PathInWords = []
+    for entry in finalPath:
+        if not entry[1] == '':
+            PathInWords.append(entry[1])            
+    return PathInWords
+
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first.
@@ -87,17 +118,119 @@ def depthFirstSearch(problem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    
+    #Path found
+    # path = []
+    #print("Start:", problem.getStartState())
+    #print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
+    #print("Start's successors:", problem.getSuccessors(problem.getStartState()))
+    
+    startState = problem.getStartState() #currentState is startingState at first
+
+    # stack = util.Stack()
+    visited = set()
+    path = list()
+    if problem.isGoalState(startState):
+        return list()
+
+   
+    #dfs with rec. is saving path in 'actions' list
+    diveDeeper(problem, visited, startState, path)
+    return path
+
+def diveDeeper(problem, visited, startNode, path):
+       
+    if problem.isGoalState(startNode):
+        return True
+    
+    if startNode in visited:
+        return False
+
+    visited.add(startNode)
+    successors = problem.getSuccessors(startNode)
+    for nextNode in successors:
+        path.append(nextNode[1])
+        
+        if diveDeeper(problem, visited, nextNode[0], path):
+            return True
+        path.pop()
+
+    visited.remove(startNode)
+    return False
+
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    startState = problem.getStartState()
+
+    if problem.isGoalState(startState):
+        return list()
+    
+    visited = set()
+    queue = util.Queue()
+    #put root node in queue, where node is tuple(state, actions's list)
+    
+    queue.push((startState, list()))
+    while not queue.isEmpty():
+        currentNode = queue.pop()
+        
+        # check if goal state is reached
+        if problem.isGoalState(currentNode[0]):
+            return currentNode[1]
+        
+        # check if goal state is visited
+        if currentNode[0] in visited:
+            continue
+        
+        visited.add(currentNode[0])
+        # explore the next lvl states in queue which parent is curr
+        successors = problem.getSuccessors(currentNode[0])
+        for nextNode in successors:
+            path = list(currentNode[1])
+            path.append(nextNode[1])
+            queue.push((nextNode[0],path))
+
+    return list()
+
+    #util.raiseNotDefined()
+
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    startState = problem.getStartState()
+
+    if problem.isGoalState(startState):
+        return list()
+    
+    visited = set()
+    queue = util.PriorityQueue()
+    #put root node in queue, where node is tuple(state, actions's list)
+    
+    queue.push((startState, list(),0.0), 0.0)
+    while not queue.isEmpty():
+        currentNode = queue.pop()
+        
+        # check if goal state is reached
+        if problem.isGoalState(currentNode[0]):
+            return currentNode[1]
+        
+        # check if goal state is visited
+        if currentNode[0] in visited:
+            continue
+        
+        visited.add(currentNode[0])
+        # explore the next lvl states in queue which parent is curr
+        successors = problem.getSuccessors(currentNode[0])
+        for nextNode in successors:
+            path = list(currentNode[1])
+            path.append(nextNode[1])
+            cost = currentNode[2] + nextNode[2]
+            queue.push((nextNode[0],path, cost), cost)
+
+    return list()
 
 def nullHeuristic(state, problem=None):
     """
@@ -107,9 +240,43 @@ def nullHeuristic(state, problem=None):
     return 0
 
 def aStarSearch(problem, heuristic=nullHeuristic):
+   
+    startState = problem.getStartState()
+
+    if problem.isGoalState(startState):
+        return list()
+   
+    closedList = set()
+    openList = util.PriorityQueue()
+    #put root node in queue, where node is tuple(state, actions's list, cost of path + heuristic)
+    openList.push((startState,list(),0.0), 0.0)
+    
+    while not openList.isEmpty():
+        currentNode = openList.pop()
+        # check if goal state is reached
+        if problem.isGoalState(currentNode[0]):
+            return currentNode[1]
+        # check if goal state is visited
+        if currentNode[0] in closedList:
+            continue
+        closedList.add(currentNode[0])
+        # explore the next lvl states in queue which parent is curr
+        
+        successors = problem.getSuccessors(currentNode[0])
+        for nextNode in successors:
+            path = list(currentNode[1])
+            path.append(nextNode[1])
+            cost = currentNode[2]+nextNode[2]
+            # push new node where priority is cost of path + heuristic of this node            
+            openList.push((nextNode[0], path, cost), cost + heuristic(nextNode[0],problem))
+    
+    return list()
+
+
+
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    #util.raiseNotDefined()
 
 
 # Abbreviations
