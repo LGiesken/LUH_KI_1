@@ -127,7 +127,6 @@ def depthFirstSearch(problem):
     
     startState = problem.getStartState() #currentState is startingState at first
 
-    # stack = util.Stack()
     visited = set()
     path = list()
     if problem.isGoalState(startState):
@@ -140,14 +139,18 @@ def depthFirstSearch(problem):
 
 def diveDeeper(problem, visited, startNode, path):
        
+    # goal reached?
     if problem.isGoalState(startNode):
         return True
     
+    # already visited?
     if startNode in visited:
         return False
 
+    #stack up the nodes
     visited.add(startNode)
     successors = problem.getSuccessors(startNode)
+    
     for nextNode in successors:
         path.append(nextNode[1])
         
@@ -169,31 +172,29 @@ def breadthFirstSearch(problem):
     
     visited = set()
     queue = util.Queue()
-    #put root node in queue, where node is tuple(state, actions's list)
+    #queue up a tuple(state, action list)
     
     queue.push((startState, list()))
     while not queue.isEmpty():
         currentNode = queue.pop()
         
-        # check if goal state is reached
+        # goal reached?
         if problem.isGoalState(currentNode[0]):
             return currentNode[1]
         
-        # check if goal state is visited
+        # already visited?
         if currentNode[0] in visited:
             continue
         
         visited.add(currentNode[0])
-        # explore the next lvl states in queue which parent is curr
+
         successors = problem.getSuccessors(currentNode[0])
         for nextNode in successors:
             path = list(currentNode[1])
             path.append(nextNode[1])
-            queue.push((nextNode[0],path))
+            queue.push((nextNode[0], path))
 
     return list()
-
-    #util.raiseNotDefined()
 
 
 def uniformCostSearch(problem):
@@ -207,27 +208,27 @@ def uniformCostSearch(problem):
     
     visited = set()
     queue = util.PriorityQueue()
-    #put root node in queue, where node is tuple(state, actions's list)
+    #queue up a tuple(state, action list) with priority
     
     queue.push((startState, list(),0.0), 0.0)
     while not queue.isEmpty():
         currentNode = queue.pop()
         
-        # check if goal state is reached
+        # goal reached?
         if problem.isGoalState(currentNode[0]):
             return currentNode[1]
         
-        # check if goal state is visited
+        # already visited?
         if currentNode[0] in visited:
             continue
         
         visited.add(currentNode[0])
-        # explore the next lvl states in queue which parent is curr
+
         successors = problem.getSuccessors(currentNode[0])
         for nextNode in successors:
             path = list(currentNode[1])
             path.append(nextNode[1])
-            cost = currentNode[2] + nextNode[2]
+            cost = currentNode[2] + nextNode[2] # add up to new priority
             queue.push((nextNode[0],path, cost), cost)
 
     return list()
@@ -248,26 +249,25 @@ def aStarSearch(problem, heuristic=nullHeuristic):
    
     closedList = set()
     openList = util.PriorityQueue()
-    #put root node in queue, where node is tuple(state, actions's list, cost of path + heuristic)
+    #queue up a tuple(state, action list) with priority and heuristic)
     openList.push((startState,list(),0.0), 0.0)
     
     while not openList.isEmpty():
         currentNode = openList.pop()
-        # check if goal state is reached
+        # goal reached?
         if problem.isGoalState(currentNode[0]):
             return currentNode[1]
-        # check if goal state is visited
+        # already visited?
         if currentNode[0] in closedList:
             continue
         closedList.add(currentNode[0])
-        # explore the next lvl states in queue which parent is curr
         
         successors = problem.getSuccessors(currentNode[0])
         for nextNode in successors:
             path = list(currentNode[1])
             path.append(nextNode[1])
-            cost = currentNode[2]+nextNode[2]
-            # push new node where priority is cost of path + heuristic of this node            
+            cost = currentNode[2] + nextNode[2]
+           # add up priorities plus the heuristic
             openList.push((nextNode[0], path, cost), cost + heuristic(nextNode[0],problem))
     
     return list()

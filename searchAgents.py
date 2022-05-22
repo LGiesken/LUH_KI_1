@@ -395,14 +395,15 @@ def cornersHeuristic(state, problem):
 
     Discription:    
         Because Pacman can only move in 4 different Directions,
-        the manhatten Distance is optimal. It calculates the minimam steps to the next corner. 
-
+        the manhatten distance is optimal, because it is the minimum Pacman can move.
+        It calculates the minimam steps to the next corner. 
+ 
     """
     corners = problem.corners # These are the corner coordinates
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    #ToDo:##################################### Warum Manhatten-Distanz? Wurde doch schonmal verwendet und ist nichts neues... ##############
+    
     #if corner not yet visited
     manhattenSteps = []
     # save manhatan distances from current position to unvisited corners 
@@ -417,7 +418,7 @@ def cornersHeuristic(state, problem):
         manhattenSteps.append((abs(corners[3][0]-state[0][0])+(abs(corners[3][1]-state[0][1]))))
 
     heuristic = 0
-    # savemax manhatan distances from current position to unvisited corners 
+    # save max manhatan distances from current position to unvisited corners 
     for d in manhattenSteps:
         heuristic = max(heuristic,d)
     return heuristic # is 0 when all corners are visited (we're in goal)
