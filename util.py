@@ -190,6 +190,12 @@ class PriorityQueue:
     def isEmpty(self):
         return len(self.heap) == 0
 
+    def listAll(self):
+        return str(self.heap)
+    
+    def getNexPrio(self):
+        return (self.heap[0])[0]
+
     def update(self, item, priority):
         # If item already in priority queue with higher priority, update its priority and rebuild the heap.
         # If item already in priority queue with equal or lower priority, do nothing.
