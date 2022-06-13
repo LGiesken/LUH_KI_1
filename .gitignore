@@ -148,3 +148,4 @@ __pycache__/testParser.cpython-310.pyc
 __pycache__/textDisplay.cpython-310.pyc
 __pycache__/util.cpython-310.pyc
 .vscode/launch.json
+*.pyc
