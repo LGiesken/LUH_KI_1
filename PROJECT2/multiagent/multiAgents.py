@@ -14,7 +14,7 @@
 
 from util import manhattanDistance
 from game import Directions
-import random, util
+import random, util, sys
 
 from game import Agent
 
@@ -162,17 +162,103 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def expMaxAgent(gameState, agent_Index, depth=0):
+            possibleActionList = gameState.getLegalActions(agent_Index)
+            numOfIndex = gameState.getNumAgents() - 1
+            best_Action = None
+
+            # if game is over or depth is 0 return the default evalFunc
+            if (gameState.isLose() or gameState.isWin() or depth == self.depth):
+                return [self.evaluationFunction(gameState)]
+            elif agent_Index == numOfIndex:
+                depth += 1
+                childAgentIndex = self.index
+            else:
+                childAgentIndex = agent_Index + 1
+            
+            #if player(pos) == MAX: value = -infinity
+            if agent_Index == self.index:
+                value = -float("inf")
+            #if player(pos) == CHANCE: value = 0
+            else:
+                value = 0
+
+            numOfAction = len(possibleActionList)
+            
+            for possible_Action in possibleActionList:
+                successorGameState = gameState.generateSuccessor(agent_Index, possible_Action)
+                expected_Max = expMaxAgent(successorGameState, childAgentIndex, depth)[0]
+
+                if agent_Index == self.index:
+                    if expected_Max > value:
+                        #value, best_move = nxt_val, move
+                        value = expected_Max
+                        best_Action = possible_Action
+                else:
+                    #value = value + prob(move) * nxt_val
+                    value = value + ((1.0/numOfAction) * expected_Max)
+
+            return value, best_Action
+
+        bestScoreActionPair = expMaxAgent(gameState, self.index)
+        bestScore = bestScoreActionPair[0]
+        bestMove =  bestScoreActionPair[1]
+        return bestMove
 
 def betterEvaluationFunction(currentGameState):
     """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
 
-    DESCRIPTION: <write something here so we know what you did>
+    DESCRIPTION: We have five important states.
+        The best case szenario is a win, so a win contributes the most.
+        The score is imprtant to. It will be wighted 10k times.
+        Food, capsules and good ghostes get calculated in game and
+        the evaluation scales down, the closer they are.
+        Bad ghosts are improtent, because they have to be avoided. But they can't run faster then Pacman.
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    pacman_Pos = currentGameState.getPacmanPosition()   # Pacmans position
+    ghost_Pos = currentGameState.getGhostPositions()    # ghost positions
+    ghost_States = currentGameState.getGhostStates()    # ghost states
+    scared_Times = [ghostState.scaredTimer for ghostState in ghost_States]      # durations of scare state
+    numOfCapsules = len(currentGameState.getCapsules()) # Number of available capsules
+    food_List = currentGameState.getFood().asList()     # List with food positions
+    numOfFood = currentGameState.getNumFood()           # get number of available food pebbles
+    
+    # List with ghosts
+    bad_Ghost = []
+    good_Ghost = []
+    
+    # inital wights of the different scenarios
+    total_scenario = 0
+    win_scenario = 0
+    lose_scenario = 0
+    score_scenario = 0
+    foodScore_scenario = 0
+    ghost_scenario = 0
 
+
+    if currentGameState.isWin():
+        win_scenario = 10000000000000000000000000000
+    elif currentGameState.isLose():
+        lose_scenario = -10000000000000000000000000000
+    score_scenario = 10000 * currentGameState.getScore()
+    capsules = 10000000000/(numOfCapsules+1)
+    for food in food_List:
+        foodScore_scenario += 50/(manhattanDistance(pacman_Pos, food)) * numOfFood
+    for index in range(len(scared_Times)):
+        if scared_Times[index] == 0:
+            bad_Ghost.append(ghost_Pos[index])
+        else:
+            good_Ghost.append(ghost_Pos[index])
+    for index in range(len(good_Ghost)):
+        ghost_scenario += 1/(((manhattanDistance(pacman_Pos, good_Ghost[index])) * scared_Times[index])+1)
+    for death in bad_Ghost:
+        ghost_scenario +=  manhattanDistance(pacman_Pos, death)
+    total_scenario = win_scenario + lose_scenario + score_scenario + capsules + foodScore_scenario + ghost_scenario
+    return total_scenario
+
+    
 # Abbreviation
 better = betterEvaluationFunction
