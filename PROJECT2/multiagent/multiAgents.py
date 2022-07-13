@@ -163,29 +163,39 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         def expMaxAgent(gameState, agent_Index, depth=0):
-            possibleActionList = gameState.getLegalActions(agent_Index)
-            numOfIndex = gameState.getNumAgents() - 1
-            best_Action = None
-
-            # if game is over or depth is 0 return the default evalFunc
+            
+            # legal Actions of the Agent we want to expMax
+            legalActionList = gameState.getLegalActions(agent_Index)
+            
+            # print("AgentIndex" + str(agent_Index))
+            gameStateAgents = gameState.getNumAgents()   # actual number of agents in gameState
+            gameStateAgentsIndex = gameStateAgents - 1
+            print("num of game state agents!", gameStateAgents)
+            #print("selfIndex", self.index)
+            # if game is over or depth is equal to the given value return the default evalFunc
             if (gameState.isLose() or gameState.isWin() or depth == self.depth):
                 return [self.evaluationFunction(gameState)]
-            elif agent_Index == numOfIndex:
+            # if we are checking only for actual agent again, go one step deeper
+            elif agent_Index == gameStateAgentsIndex:
                 depth += 1
                 childAgentIndex = self.index
+
+            # else check the expMax for the next agent
             else:
                 childAgentIndex = agent_Index + 1
             
             #if player(pos) == MAX: value = -infinity
             if agent_Index == self.index:
-                value = -float("inf")
+                value = -1000000000000000000000.0
             #if player(pos) == CHANCE: value = 0
             else:
                 value = 0
 
-            numOfAction = len(possibleActionList)
-            
-            for possible_Action in possibleActionList:
+            numOfAction = len(legalActionList)
+            choosen_Action = None
+
+            # for each possible action calculete the expMax value and keep the maximum value
+            for possible_Action in legalActionList:
                 successorGameState = gameState.generateSuccessor(agent_Index, possible_Action)
                 expected_Max = expMaxAgent(successorGameState, childAgentIndex, depth)[0]
 
@@ -193,13 +203,14 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                     if expected_Max > value:
                         #value, best_move = nxt_val, move
                         value = expected_Max
-                        best_Action = possible_Action
+                        choosen_Action = possible_Action
                 else:
                     #value = value + prob(move) * nxt_val
                     value = value + ((1.0/numOfAction) * expected_Max)
+            #return the best value and the best action
+            return value, choosen_Action
 
-            return value, best_Action
-
+        # call expMax and return the best move
         bestScoreActionPair = expMaxAgent(gameState, self.index)
         bestScore = bestScoreActionPair[0]
         bestMove =  bestScoreActionPair[1]
@@ -227,37 +238,51 @@ def betterEvaluationFunction(currentGameState):
     numOfFood = currentGameState.getNumFood()           # get number of available food pebbles
     
     # List with ghosts
-    bad_Ghost = []
-    good_Ghost = []
+    bad_Ghosts = []
+    good_Ghosts = []
     
     # inital wights of the different scenarios
-    total_scenario = 0
-    win_scenario = 0
-    lose_scenario = 0
-    score_scenario = 0
-    foodScore_scenario = 0
-    ghost_scenario = 0
+    total_reward = 0
+    win_reward = 0
+    lose_reward = 0
+    score_reward = 0
+    foodScore_reward = 0
+    ghost_reward = 0
 
 
     if currentGameState.isWin():
-        win_scenario = 10000000000000000000000000000
+        # best possible reward
+        win_reward = 10000000000000000000000000000
     elif currentGameState.isLose():
-        lose_scenario = -10000000000000000000000000000
-    score_scenario = 10000 * currentGameState.getScore()
+        # worst possible reward
+        lose_reward = -10000000000000000000000000000
+    
+    # wighted score is the reward für a good score. It is lowerd over time
+    score_reward = 10000 * currentGameState.getScore()
+    
     capsules = 10000000000/(numOfCapsules+1)
+
     for food in food_List:
-        foodScore_scenario += 50/(manhattanDistance(pacman_Pos, food)) * numOfFood
-    for index in range(len(scared_Times)):
-        if scared_Times[index] == 0:
-            bad_Ghost.append(ghost_Pos[index])
+        # The farther away the food is and the more there are, the lower the reward
+        foodScore_reward += 50/(manhattanDistance(pacman_Pos, food)) * numOfFood
+
+    for time in range(len(scared_Times)):
+        if scared_Times[time] == 0:
+            bad_Ghosts.append(ghost_Pos[time])
         else:
-            good_Ghost.append(ghost_Pos[index])
-    for index in range(len(good_Ghost)):
-        ghost_scenario += 1/(((manhattanDistance(pacman_Pos, good_Ghost[index])) * scared_Times[index])+1)
-    for death in bad_Ghost:
-        ghost_scenario +=  manhattanDistance(pacman_Pos, death)
-    total_scenario = win_scenario + lose_scenario + score_scenario + capsules + foodScore_scenario + ghost_scenario
-    return total_scenario
+            good_Ghosts.append(ghost_Pos[time])
+    
+    # bad ghostes have i higher reward, when the are farer away
+    for death in bad_Ghosts:
+        ghost_reward +=  manhattanDistance(pacman_Pos, death)
+    
+    # near good ghostes have a higher reward, when they are close by
+    for goodGhostIndex in range(len(good_Ghosts)):
+        ghost_reward += 1/(((manhattanDistance(pacman_Pos, good_Ghosts[goodGhostIndex])) * scared_Times[goodGhostIndex])+1)
+    
+    # sum up all rewards
+    total_reward = win_reward + lose_reward + score_reward + capsules + foodScore_reward + ghost_reward
+    return total_reward
 
     
 # Abbreviation
